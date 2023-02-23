@@ -8,6 +8,8 @@
 		public string? Content { get; set; }
 		public string? Author { get; set; }
 		public string? Genre { get; set; }
-
+		// Relationships
+		public List<Review>? Reviews { get; set; }
+		public List<Rating>? Ratings { get; set; }
 	}
 }
