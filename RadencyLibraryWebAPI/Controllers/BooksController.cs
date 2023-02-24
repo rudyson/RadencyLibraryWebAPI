@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 using RadencyLibraryWebAPI.Models;
@@ -11,10 +12,12 @@ namespace RadencyLibraryWebAPI.Controllers
 	{
 		private readonly ILogger<BooksController> _logger;
 		private readonly LibraryDbContext _context;
-		public BooksController(ILogger<BooksController> logger, LibraryDbContext context)
+		private readonly IMapper _mapper;
+		public BooksController(ILogger<BooksController> logger, LibraryDbContext context,IMapper mapper)
 		{
 			_logger = logger;
 			_context = context;
+			_mapper = mapper;
 		}
 		/*
 		1. Get all books. Order by provided value (title or author)

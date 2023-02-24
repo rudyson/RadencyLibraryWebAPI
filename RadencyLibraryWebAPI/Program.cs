@@ -15,6 +15,7 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddRouting(options => options.LowercaseUrls = true);
 
 builder.Services.AddDbContext<LibraryDbContext>();
+builder.Services.AddTransient<ILibraryRepository, LibraryEFRepository>();
 builder.Services.AddTransient<BooksController>();
 builder.Services.AddTransient<RecommendedController>();
 
