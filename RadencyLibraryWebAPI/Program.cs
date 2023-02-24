@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using RadencyLibraryWebAPI.Controllers;
 using RadencyLibraryWebAPI.Models;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,6 +17,11 @@ builder.Services.AddRouting(options => options.LowercaseUrls = true);
 builder.Services.AddDbContext<LibraryDbContext>();
 builder.Services.AddTransient<BooksController>();
 builder.Services.AddTransient<RecommendedController>();
+
+builder.Services.AddControllers().AddJsonOptions(
+	x => x.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles);
+builder.Services.AddControllers().AddJsonOptions(
+	x => x.JsonSerializerOptions.WriteIndented = true);
 
 /*
 var provider = builder.Services.BuildServiceProvider();

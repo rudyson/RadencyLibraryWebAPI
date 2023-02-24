@@ -29,8 +29,8 @@ namespace RadencyLibraryWebAPI.Controllers
 				var books = _context.Books.Include(b => b.Reviews).Include(b => b.Ratings).ToList();
 				switch (order)
 				{
-					case "author" : return Ok(books.OrderBy(b => b.Author));
-					case "title": return Ok(books.OrderBy(b => b.Title));
+					case "author" : return Ok(books.OrderBy(b => b.Author).ToList());
+					case "title": return Ok(books.OrderBy(b => b.Title).ToList());
 					default: return StatusCode(404, "Wrong order option");
 				}
 			}
@@ -44,18 +44,18 @@ namespace RadencyLibraryWebAPI.Controllers
 		3. Get book details with the list of reviews
 		GET https://{{baseUrl}}/api/books/{id}
 		*/
-		/*
 		[HttpGet("{id}", Name = "GetBookById")]
-        public IActionResult Get(int id)
+/*
+ Ratings null ?; - Reviews=>Book; BookId, Id
+ */
+		public IActionResult Get(int id)
 		{
-			var book = _context.Books.FirstOrDefault(b => b.Id == id);
-			if (book == null)
-			{
-				return StatusCode(404, "Book not found");
-			}
-			return Ok(book);
+			var book = _context.Books
+				//.Include(b => b.Reviews)
+				.FirstOrDefault(b => b.Id == id);
+			if (book == null) return StatusCode(404, "Book not found");
+			else return Ok(book);
 		}
-		*/
 		/*
 		4. Delete a book using a secret key. Save the secret key in the config of your application. Compare this key with a query param
 		DELETE https://{{baseUrl}}/api/books/{id}?secret=qwerty
@@ -80,7 +80,7 @@ namespace RadencyLibraryWebAPI.Controllers
 		public IActionResult Index()
 		{
 			//BooksController/GetBooks
-			
+
 			_logger.LogDebug(String.Join("/",
 				this.ControllerContext.RouteData.Values["controller"],
 				this.ControllerContext.RouteData.Values["action"]));
