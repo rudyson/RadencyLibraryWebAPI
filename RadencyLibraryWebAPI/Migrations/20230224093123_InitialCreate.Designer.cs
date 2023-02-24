@@ -11,7 +11,7 @@ using RadencyLibraryWebAPI.Models;
 namespace RadencyLibraryWebAPI.Migrations
 {
     [DbContext(typeof(LibraryDbContext))]
-    [Migration("20230223221704_InitialCreate")]
+    [Migration("20230224093123_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -84,6 +84,9 @@ namespace RadencyLibraryWebAPI.Migrations
 
                     b.Property<int>("BookId")
                         .HasColumnType("int");
+
+                    b.Property<string>("Message")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Reviewer")
                         .HasColumnType("nvarchar(max)");

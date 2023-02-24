@@ -82,6 +82,9 @@ namespace RadencyLibraryWebAPI.Migrations
                     b.Property<int>("BookId")
                         .HasColumnType("int");
 
+                    b.Property<string>("Message")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Reviewer")
                         .HasColumnType("nvarchar(max)");
 
