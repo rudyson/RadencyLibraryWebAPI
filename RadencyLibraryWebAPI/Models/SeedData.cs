@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using RadencyLibraryWebAPI.Entities;
 
 namespace RadencyLibraryWebAPI.Models
 {

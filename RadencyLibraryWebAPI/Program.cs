@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using RadencyLibraryWebAPI.Controllers;
 using RadencyLibraryWebAPI.Models;
+using RadencyLibraryWebAPI.Models.DTO;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -13,26 +14,29 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddRouting(options => options.LowercaseUrls = true);
-
+// Registration DbContext
 builder.Services.AddDbContext<LibraryDbContext>();
-builder.Services.AddTransient<ILibraryRepository, LibraryEFRepository>();
+//builder.Services.AddTransient<ILibraryRepository, LibraryEFRepository>();
 builder.Services.AddTransient<BooksController>();
 builder.Services.AddTransient<RecommendedController>();
-
+// Json Options
 builder.Services.AddControllers().AddJsonOptions(
 	x => x.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles);
 builder.Services.AddControllers().AddJsonOptions(
 	x => x.JsonSerializerOptions.WriteIndented = true);
-
-/*
-var provider = builder.Services.BuildServiceProvider();
-var configuration = provider.GetRequiredService<IConfiguration>();
-string connectionString = configuration.GetValue<string>("Data:FoodDeliveryShopProducts:ConnectionStrings");
-builder.Services.AddDbContext<LibraryDbContext>(options =>
-{
-	options.UseSqlServer(connectionString);
-});
-*/
+// Auto Mapper initialization
+builder.Services.AddAutoMapper(
+	typeof(Program).Assembly,
+	typeof(BookCompactDto).Assembly,
+	typeof(BookDetailedDto).Assembly,
+	typeof(ReviewDetailedDto).Assembly,
+	typeof(BookIdDto).Assembly,
+	typeof(RatingIdDto).Assembly,
+	typeof(RatingNewDto).Assembly,
+	typeof(ReviewIdDto).Assembly,
+	typeof(ReviewNewDto).Assembly,
+	typeof(BookNewDto).Assembly
+	);
 
 var app = builder.Build();
 
@@ -51,5 +55,7 @@ app.MapControllers();
 app.MapControllerRoute(
 	name: "api",
 	pattern: "{controller}/{action}/{id?}");
+// Generating seed data
 SeedData.EnsurePopulated(app);
+// Application startup
 app.Run();
