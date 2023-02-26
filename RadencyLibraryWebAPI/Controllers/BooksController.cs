@@ -27,7 +27,7 @@ namespace RadencyLibraryWebAPI.Controllers
 		GET https://{{baseUrl}}/api/books?order=author
 		*/
 		[HttpGet(Name = "GetBooksOrderedByTitleAuthor")]
-		public async Task<ActionResult> GetBooksOrderedByTitleAuthor(string order) //<IEnumerable<BookCompactDto>>
+		public async Task<ActionResult> GetBooksOrderedByTitleAuthor(string? order) //<IEnumerable<BookCompactDto>>
 		{
 			try
 			{
@@ -38,11 +38,18 @@ namespace RadencyLibraryWebAPI.Controllers
 
 				List<BookCompactDto> booksMappedToDto = _mapper.Map<List<Book>, List<BookCompactDto>>(books);
 
-				switch (order.ToLower())
+				if (order!= null)
 				{
-					case "author": return Ok(booksMappedToDto.OrderBy(b => b.Author).ToList());
-					case "title": return Ok(booksMappedToDto.OrderBy(b => b.Title).ToList());
-					default: return StatusCode(404, "Wrong order option");
+					switch (order.ToLower())
+					{
+						case "author": return Ok(booksMappedToDto.OrderBy(b => b.Author).ToList());
+						case "title": return Ok(booksMappedToDto.OrderBy(b => b.Title).ToList());
+						default: return StatusCode(404, "Wrong order option");
+					}
+				}
+				else
+				{
+					return Ok(booksMappedToDto);
 				}
 			}
 			catch (Exception ex)
@@ -75,30 +82,36 @@ namespace RadencyLibraryWebAPI.Controllers
 		4. Delete a book using a secret key. Save the secret key in the config of your application. Compare this key with a query param
 		DELETE https://{{baseUrl}}/api/books/{id}?secret=qwerty
 		*/
-		[HttpDelete(Name = "DeleteBookById")]
-		public async Task<IActionResult> DeleteBookById(int id, string secret)
+		[HttpDelete("{id:int}",Name = "DeleteBookById")]
+		public async Task<IActionResult> DeleteBookById(int id, string? secret)
 		{
 			string _secret = Environment.GetEnvironmentVariable("HTTPDELETE_SECRET") ?? "";
-			if (_secret == secret)
-			{
-				try
-				{
-					var books = _context.Books;
-					var bookToDelete = await books.FirstOrDefaultAsync(b => b.Id == id);
-					var bookDeletedDto = _mapper.Map
-						<BookIdDto>
-						(bookToDelete);
-					books.Remove(bookToDelete!);
-					await _context.SaveChangesAsync();
-
-					return Ok(bookDeletedDto);
-				}
-				catch (Exception ex)
-				{
-					return StatusCode(500, ex.Message);
-				}
+			if (secret == null) {
+				return StatusCode(403, "Secret key must be provided");
 			}
-			else return StatusCode(404, "Wrong secret");
+			else
+			{
+				if (_secret == secret)
+				{
+					try
+					{
+						var books = _context.Books;
+						var bookToDelete = await books.FirstOrDefaultAsync(b => b.Id == id);
+						var bookDeletedDto = _mapper.Map
+							<BookIdDto>
+							(bookToDelete);
+						books.Remove(bookToDelete!);
+						await _context.SaveChangesAsync();
+
+						return Ok(bookDeletedDto);
+					}
+					catch (Exception ex)
+					{
+						return StatusCode(500, ex.Message);
+					}
+				}
+				else return StatusCode(404, "Wrong secret");
+			}
 		}
 		/*
 		5. Save a new book.
@@ -148,7 +161,7 @@ namespace RadencyLibraryWebAPI.Controllers
 		6. Save a review for the book.
 		PUT https://{{baseUrl}}/api/books/{id}/review
 		*/
-		[HttpPut("{id}/review", Name = "PutReviewById")]
+		[HttpPut("{id:int}/review", Name = "PutReviewById")]
 		public async Task<IActionResult> PutReviewById(int id, ReviewNewDto review)
 		{
 			try
@@ -173,7 +186,7 @@ namespace RadencyLibraryWebAPI.Controllers
 		7. Rate a book
 		PUT https://{{baseUrl}}/api/books/{id}/rate
 		*/
-		[HttpPut("{id}/rate", Name = "PutRateById")]
+		[HttpPut("{id:int}/rate", Name = "PutRateById")]
 		public async Task<IActionResult> PutRateById(int id, RatingNewDto rating)
 		{
 			try
