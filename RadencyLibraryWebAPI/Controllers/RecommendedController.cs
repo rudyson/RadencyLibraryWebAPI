@@ -29,19 +29,18 @@ namespace RadencyLibraryWebAPI.Controllers
 		2. Get top 10 books with high rating and number of reviews greater than 10. You can filter books by specifying genre. Order by rating
 		GET https://{{baseUrl}}/api/recommended?genre=horror
 		*/
-		[HttpGet("{genre?}",Name = "GetRecommendedBooksWithGenreFilter")]
-		public ActionResult GetRecommendedBooksWithGenreFilter(string genre)
+		[HttpGet("{genre?}", Name = "GetRecommendedBooksWithGenreFilter")]
+		public async Task<ActionResult> GetRecommendedBooksWithGenreFilter(string genre)
 		{
 			try
 			{
-				
 				if (genre != null)
 				{
-					List<Book> books = _context.Books
+					List<Book> books = await _context.Books
 					.Include(b => b.Reviews)
 					.Include(b => b.Ratings)
-					.ToList();
-					List<Book> booksByGenre  = books.Where(b => b.Genre!.ToLower() == genre.ToLower()).ToList();
+					.ToListAsync();
+					List<Book> booksByGenre = books.Where(b => b.Genre!.ToLower() == genre.ToLower()).ToList();
 					List<BookCompactDto> booksMappedToDto = _mapper.Map<List<Book>, List<BookCompactDto>>(books);
 					return Ok(
 						booksMappedToDto

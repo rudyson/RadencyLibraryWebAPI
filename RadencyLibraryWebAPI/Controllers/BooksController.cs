@@ -11,15 +11,15 @@ namespace RadencyLibraryWebAPI.Controllers
 	[Route("api/[controller]")]
 	public class BooksController : Controller
 	{
-		
+
 		private readonly ILogger<BooksController> _logger;
 		private readonly LibraryDbContext _context;
 		private readonly IMapper _mapper;
-		public BooksController(ILogger<BooksController> logger,IMapper mapper, LibraryDbContext context)
+		public BooksController(ILogger<BooksController> logger, IMapper mapper, LibraryDbContext context)
 		{
 			DotNetEnv.Env.Load();
 			_logger = logger;
-			_context = context; 
+			_context = context;
 			_mapper = mapper;
 		}
 		/*
@@ -27,16 +27,16 @@ namespace RadencyLibraryWebAPI.Controllers
 		GET https://{{baseUrl}}/api/books?order=author
 		*/
 		[HttpGet(Name = "GetBooksOrderedByTitleAuthor")]
-		public ActionResult GetBooksOrderedByTitleAuthor(string order) //<IEnumerable<BookCompactDto>>
+		public async Task<ActionResult> GetBooksOrderedByTitleAuthor(string order) //<IEnumerable<BookCompactDto>>
 		{
 			try
 			{
-				List<Book> books= _context.Books
+				List<Book> books = await _context.Books
 				.Include(b => b.Reviews)
 				.Include(b => b.Ratings)
-				.ToList();
+				.ToListAsync();
 
-				List<BookCompactDto> booksMappedToDto = _mapper.Map<List<Book>,List<BookCompactDto>>(books);
+				List<BookCompactDto> booksMappedToDto = _mapper.Map<List<Book>, List<BookCompactDto>>(books);
 
 				switch (order.ToLower())
 				{
@@ -55,15 +55,15 @@ namespace RadencyLibraryWebAPI.Controllers
 		GET https://{{baseUrl}}/api/books/{id}
 		*/
 		[HttpGet("{id}", Name = "GetBookById")]
-		public IActionResult GetBookById(int id)
+		public async Task<IActionResult> GetBookById(int id)
 		{
-			var book = _context.Books
+			var book = await _context.Books
 				.Include(b => b.Reviews)
 				.Include(b => b.Ratings)
-				.FirstOrDefault(b => b.Id == id);
+				.FirstOrDefaultAsync(b => b.Id == id);
 			if (book != null)
 			{
-				BookDetailedDto bookDetailedDto = _mapper.Map<BookDetailedDto>(book); 
+				BookDetailedDto bookDetailedDto = _mapper.Map<BookDetailedDto>(book);
 				return Ok(bookDetailedDto);
 			}
 			else
@@ -76,7 +76,7 @@ namespace RadencyLibraryWebAPI.Controllers
 		DELETE https://{{baseUrl}}/api/books/{id}?secret=qwerty
 		*/
 		[HttpDelete(Name = "DeleteBookById")]
-		public IActionResult DeleteBookById(int id, string secret)
+		public async Task<IActionResult> DeleteBookById(int id, string secret)
 		{
 			string _secret = Environment.GetEnvironmentVariable("HTTPDELETE_SECRET") ?? "";
 			if (_secret == secret)
@@ -84,12 +84,12 @@ namespace RadencyLibraryWebAPI.Controllers
 				try
 				{
 					var books = _context.Books;
-					var bookToDelete = books.FirstOrDefault(b => b.Id == id);
+					var bookToDelete = await books.FirstOrDefaultAsync(b => b.Id == id);
 					var bookDeletedDto = _mapper.Map
 						<BookIdDto>
 						(bookToDelete);
 					books.Remove(bookToDelete!);
-					_context.SaveChanges();
+					await _context.SaveChangesAsync();
 
 					return Ok(bookDeletedDto);
 				}
@@ -104,20 +104,20 @@ namespace RadencyLibraryWebAPI.Controllers
 		5. Save a new book.
 		POST https://{{baseUrl}}/api/books/save
 		*/
-		[HttpPost("save",Name = "PostBookSave")]
-		public IActionResult PostBookSave(BookNewDto book)
+		[HttpPost("save", Name = "PostBookSave")]
+		public async Task<IActionResult> PostBookSave(BookNewDto book)
 		{
 			try
 			{
 				if (book == null)
-					return BadRequest();
+					return StatusCode(StatusCodes.Status500InternalServerError, "Unable to create or update book");
 				Book newBookConverted = _mapper.Map<Book>(book);
-				var bookExists = _context.Books.Find(newBookConverted.Id);
+				var bookExists = await _context.Books.FindAsync(newBookConverted.Id);
 				BookIdDto bookSavedDto;
 				if (bookExists == null)
 				{
 					// Adding new book if book not found by Id
-					_context.Books.Add(newBookConverted);
+					await _context.Books.AddAsync(newBookConverted);
 					bookSavedDto = _mapper.Map<BookIdDto>(newBookConverted);
 				}
 				else
@@ -135,14 +135,13 @@ namespace RadencyLibraryWebAPI.Controllers
 						bookExists.Author = newBookConverted.Author;
 					bookSavedDto = _mapper.Map<BookIdDto>(bookExists);
 				}
-				_context.SaveChanges();
-				
+				await _context.SaveChangesAsync();
 				return Ok(bookSavedDto);
 			}
 			catch (Exception)
 			{
 				return StatusCode(StatusCodes.Status500InternalServerError,
-					"Unable to create new book");
+					"Unable to create or update book");
 			}
 		}
 		/*
@@ -150,15 +149,16 @@ namespace RadencyLibraryWebAPI.Controllers
 		PUT https://{{baseUrl}}/api/books/{id}/review
 		*/
 		[HttpPut("{id}/review", Name = "PutReviewById")]
-		public IActionResult PutReviewById(int id,ReviewNewDto review) {
+		public async Task<IActionResult> PutReviewById(int id, ReviewNewDto review)
+		{
 			try
 			{
 				if (review == null)
 					return BadRequest();
 				Review newReviewConverted = _mapper.Map<Review>(review);
 				newReviewConverted.BookId = id;
-				_context.Reviews.Add(newReviewConverted);
-				_context.SaveChanges();
+				await _context.Reviews.AddAsync(newReviewConverted);
+				await _context.SaveChangesAsync();
 				ReviewIdDto resultReview = _mapper.Map<ReviewIdDto>(newReviewConverted);
 				return Ok(resultReview);
 			}
@@ -174,7 +174,7 @@ namespace RadencyLibraryWebAPI.Controllers
 		PUT https://{{baseUrl}}/api/books/{id}/rate
 		*/
 		[HttpPut("{id}/rate", Name = "PutRateById")]
-		public IActionResult PutRateById(int id, RatingNewDto rating)
+		public async Task<IActionResult> PutRateById(int id, RatingNewDto rating)
 		{
 			try
 			{
@@ -182,14 +182,14 @@ namespace RadencyLibraryWebAPI.Controllers
 					return BadRequest();
 				Rating newRatingConverted = _mapper.Map<Rating>(rating);
 				newRatingConverted.BookId = id;
-				_context.Ratings.Add(newRatingConverted);
-				_context.SaveChanges();
+				await _context.Ratings.AddAsync(newRatingConverted);
+				await _context.SaveChangesAsync();
 				RatingIdDto resultRating = _mapper.Map<RatingIdDto>(newRatingConverted);
 				return Ok(resultRating);
 			}
 			catch (Exception ex)
 			{
-				_logger.LogError(ex.Message," | ",ex.StackTrace);
+				_logger.LogError(ex.Message, " | ", ex.StackTrace);
 				return StatusCode(StatusCodes.Status500InternalServerError,
 					$"Unable to publish rating of book BookId:{id}");
 			}
