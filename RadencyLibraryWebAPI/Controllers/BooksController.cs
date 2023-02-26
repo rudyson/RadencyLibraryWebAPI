@@ -44,7 +44,7 @@ namespace RadencyLibraryWebAPI.Controllers
 					{
 						case "author": return Ok(booksMappedToDto.OrderBy(b => b.Author).ToList());
 						case "title": return Ok(booksMappedToDto.OrderBy(b => b.Title).ToList());
-						default: return StatusCode(404, "Wrong order option");
+						default: return StatusCode(StatusCodes.Status404NotFound, "Wrong order option");
 					}
 				}
 				else
@@ -54,7 +54,7 @@ namespace RadencyLibraryWebAPI.Controllers
 			}
 			catch (Exception ex)
 			{
-				return StatusCode(500, ex.Message);
+				return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
 			}
 		}
 		/*
@@ -75,7 +75,7 @@ namespace RadencyLibraryWebAPI.Controllers
 			}
 			else
 			{
-				return StatusCode(404, "Book not found");
+				return StatusCode(StatusCodes.Status404NotFound, "Book not found");
 			}
 		}
 		/*
@@ -110,14 +110,14 @@ namespace RadencyLibraryWebAPI.Controllers
 					}
 					catch (Exception ex)
 					{
-						return StatusCode(500, ex.Message);
+						return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
 					}
 				}
-				else return StatusCode(405, "Wrong secret key");
+				else return StatusCode(StatusCodes.Status405MethodNotAllowed, "Wrong secret key");
 			}
 			else
 			{
-				return StatusCode(403, "Secret key must be provided");
+				return StatusCode(StatusCodes.Status403Forbidden, "Secret key must be provided");
 			}
 		}
 		/*
