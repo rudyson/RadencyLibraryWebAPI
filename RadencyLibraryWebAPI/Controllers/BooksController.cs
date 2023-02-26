@@ -185,12 +185,18 @@ namespace RadencyLibraryWebAPI.Controllers
 			{
 				if (review == null)
 					return ReportError(StatusCodes.Status400BadRequest, $"Unable to leave review about book (BookId:{id})");
-				Review newReviewConverted = _mapper.Map<Review>(review);
-				newReviewConverted.BookId = id;
-				await _context.Reviews.AddAsync(newReviewConverted);
-				await _context.SaveChangesAsync();
-				ReviewIdDto resultReview = _mapper.Map<ReviewIdDto>(newReviewConverted);
-				return Ok(resultReview);
+				if (await _context.Books.FindAsync(id) != null)
+				{
+					Review newReviewConverted = _mapper.Map<Review>(review);
+					newReviewConverted.BookId = id;
+					await _context.Reviews.AddAsync(newReviewConverted);
+					await _context.SaveChangesAsync();
+					ReviewIdDto resultReview = _mapper.Map<ReviewIdDto>(newReviewConverted);
+					return Ok(resultReview);
+				}
+				else return ReportError(
+					StatusCodes.Status404NotFound,
+					$"Unable to publish review. Book not found(BookId:{id})");
 			}
 			catch (Exception ex)
 			{
@@ -210,12 +216,18 @@ namespace RadencyLibraryWebAPI.Controllers
 			{
 				if (rating == null)
 					return ReportError(StatusCodes.Status400BadRequest, $"Unable to rate book {id}");
-				Rating newRatingConverted = _mapper.Map<Rating>(rating);
-				newRatingConverted.BookId = id;
-				await _context.Ratings.AddAsync(newRatingConverted);
-				await _context.SaveChangesAsync();
-				RatingIdDto resultRating = _mapper.Map<RatingIdDto>(newRatingConverted);
-				return Ok(resultRating);
+				if (await _context.Books.FindAsync(id) != null)
+				{
+					Rating newRatingConverted = _mapper.Map<Rating>(rating);
+					newRatingConverted.BookId = id;
+					await _context.Ratings.AddAsync(newRatingConverted);
+					await _context.SaveChangesAsync();
+					RatingIdDto resultRating = _mapper.Map<RatingIdDto>(newRatingConverted);
+					return Ok(resultRating);
+				}
+				else return ReportError(
+					StatusCodes.Status404NotFound,
+					$"Unable to publish rating. Book not found(BookId:{id})");
 			}
 			catch (Exception ex)
 			{
