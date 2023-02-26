@@ -86,11 +86,7 @@ namespace RadencyLibraryWebAPI.Controllers
 		public async Task<IActionResult> DeleteBookById(int id, string? secret)
 		{
 			string _secret = Environment.GetEnvironmentVariable("HTTPDELETE_SECRET") ?? "";
-			if (secret == null) {
-				return StatusCode(403, "Secret key must be provided");
-			}
-			else
-			{
+			if (secret != null) {
 				if (_secret == secret)
 				{
 					try
@@ -101,6 +97,13 @@ namespace RadencyLibraryWebAPI.Controllers
 							<BookIdDto>
 							(bookToDelete);
 						books.Remove(bookToDelete!);
+						// Removing associated Reviews
+						_context.Reviews.RemoveRange(
+							_context.Reviews.Where(r => r.BookId == id));
+						// Removing associated Ratings
+						_context.Ratings.RemoveRange(
+							_context.Ratings.Where(r => r.BookId == id));
+						// Applying changes
 						await _context.SaveChangesAsync();
 
 						return Ok(bookDeletedDto);
@@ -110,7 +113,11 @@ namespace RadencyLibraryWebAPI.Controllers
 						return StatusCode(500, ex.Message);
 					}
 				}
-				else return StatusCode(404, "Wrong secret");
+				else return StatusCode(405, "Wrong secret key");
+			}
+			else
+			{
+				return StatusCode(403, "Secret key must be provided");
 			}
 		}
 		/*
