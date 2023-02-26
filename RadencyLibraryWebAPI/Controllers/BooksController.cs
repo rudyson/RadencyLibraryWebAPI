@@ -38,7 +38,7 @@ namespace RadencyLibraryWebAPI.Controllers
 
 				List<BookCompactDto> booksMappedToDto = _mapper.Map<List<Book>, List<BookCompactDto>>(books);
 
-				if (order!= null)
+				if (order != null)
 				{
 					switch (order.ToLower())
 					{
@@ -54,14 +54,15 @@ namespace RadencyLibraryWebAPI.Controllers
 			}
 			catch (Exception ex)
 			{
-				return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+				return ReportError(
+					StatusCodes.Status500InternalServerError, exception: ex);
 			}
 		}
 		/*
 		3. Get book details with the list of reviews
 		GET https://{{baseUrl}}/api/books/{id}
 		*/
-		[HttpGet("{id}", Name = "GetBookById")]
+		[HttpGet("{id:int}", Name = "GetBookById")]
 		public async Task<IActionResult> GetBookById(int id)
 		{
 			var book = await _context.Books
@@ -75,18 +76,21 @@ namespace RadencyLibraryWebAPI.Controllers
 			}
 			else
 			{
-				return StatusCode(StatusCodes.Status404NotFound, "Book not found");
+				return ReportError(
+					StatusCodes.Status404NotFound,
+					$"Book not found (BookId:{id})");
 			}
 		}
 		/*
 		4. Delete a book using a secret key. Save the secret key in the config of your application. Compare this key with a query param
 		DELETE https://{{baseUrl}}/api/books/{id}?secret=qwerty
 		*/
-		[HttpDelete("{id:int}",Name = "DeleteBookById")]
+		[HttpDelete("{id:int}", Name = "DeleteBookById")]
 		public async Task<IActionResult> DeleteBookById(int id, string? secret)
 		{
 			string _secret = Environment.GetEnvironmentVariable("HTTPDELETE_SECRET") ?? "";
-			if (secret != null) {
+			if (secret != null && secret != "")
+			{
 				if (_secret == secret)
 				{
 					try
@@ -110,14 +114,19 @@ namespace RadencyLibraryWebAPI.Controllers
 					}
 					catch (Exception ex)
 					{
-						return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+						return ReportError(StatusCodes.Status500InternalServerError, exception: ex);
 					}
 				}
-				else return StatusCode(StatusCodes.Status405MethodNotAllowed, "Wrong secret key");
+				else return ReportError(
+					StatusCodes.Status405MethodNotAllowed,
+					"Wrong secret key");
 			}
 			else
 			{
-				return StatusCode(StatusCodes.Status403Forbidden, "Secret key must be provided");
+
+				return ReportError(
+					StatusCodes.Status403Forbidden,
+					"Secret key must be provided");
 			}
 		}
 		/*
@@ -130,7 +139,7 @@ namespace RadencyLibraryWebAPI.Controllers
 			try
 			{
 				if (book == null)
-					return StatusCode(StatusCodes.Status500InternalServerError, "Unable to create or update book");
+					return ReportError(StatusCodes.Status400BadRequest, "Unable to create or update book");
 				Book newBookConverted = _mapper.Map<Book>(book);
 				var bookExists = await _context.Books.FindAsync(newBookConverted.Id);
 				BookIdDto bookSavedDto;
@@ -158,10 +167,11 @@ namespace RadencyLibraryWebAPI.Controllers
 				await _context.SaveChangesAsync();
 				return Ok(bookSavedDto);
 			}
-			catch (Exception)
+			catch (Exception ex)
 			{
-				return StatusCode(StatusCodes.Status500InternalServerError,
-					"Unable to create or update book");
+				return ReportError(
+					StatusCodes.Status500InternalServerError,
+					"Unable to create or update book", ex);
 			}
 		}
 		/*
@@ -174,7 +184,7 @@ namespace RadencyLibraryWebAPI.Controllers
 			try
 			{
 				if (review == null)
-					return BadRequest();
+					return ReportError(StatusCodes.Status400BadRequest, $"Unable to leave review about book (BookId:{id})");
 				Review newReviewConverted = _mapper.Map<Review>(review);
 				newReviewConverted.BookId = id;
 				await _context.Reviews.AddAsync(newReviewConverted);
@@ -184,9 +194,9 @@ namespace RadencyLibraryWebAPI.Controllers
 			}
 			catch (Exception ex)
 			{
-				_logger.LogError(ex.Message, " | ", ex.StackTrace);
-				return StatusCode(StatusCodes.Status500InternalServerError,
-					$"Unable to publish review of book BookId:{id}");
+				return ReportError(
+					StatusCodes.Status500InternalServerError,
+					$"Unable to publish review of book (BookId:{id})", ex);
 			}
 		}
 		/*
@@ -199,7 +209,7 @@ namespace RadencyLibraryWebAPI.Controllers
 			try
 			{
 				if (rating == null)
-					return BadRequest();
+					return ReportError(StatusCodes.Status400BadRequest, $"Unable to rate book {id}");
 				Rating newRatingConverted = _mapper.Map<Rating>(rating);
 				newRatingConverted.BookId = id;
 				await _context.Ratings.AddAsync(newRatingConverted);
@@ -209,10 +219,31 @@ namespace RadencyLibraryWebAPI.Controllers
 			}
 			catch (Exception ex)
 			{
-				_logger.LogError(ex.Message, " | ", ex.StackTrace);
-				return StatusCode(StatusCodes.Status500InternalServerError,
-					$"Unable to publish rating of book BookId:{id}");
+				return ReportError(
+					StatusCodes.Status500InternalServerError,
+					$"Unable to publish rating of book BookId:{id}", ex);
 			}
+		}
+		private ObjectResult ReportError(int statusCode, string reportMessage = "", Exception? exception = null)
+		{
+			if (exception != null)
+			{
+				_logger.LogError(String.Join(" | ",
+				DateTime.UtcNow.ToShortDateString(),
+				statusCode.ToString(),
+				reportMessage,
+				exception.Message,
+				exception.StackTrace));
+			}
+			else
+			{
+				_logger.LogError(String.Join(" | ",
+				DateTime.UtcNow.ToShortDateString(),
+				statusCode.ToString(),
+				reportMessage,
+				"There is no exception"));
+			}
+			return StatusCode(statusCode, reportMessage);
 		}
 	}
 }

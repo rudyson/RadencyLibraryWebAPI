@@ -1,11 +1,9 @@
 ﻿using AutoMapper;
-//using System.Web.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RadencyLibraryWebAPI.Entities;
 using RadencyLibraryWebAPI.Models;
 using RadencyLibraryWebAPI.Models.DTO;
-using System.Collections.Generic;
 
 namespace RadencyLibraryWebAPI.Controllers
 {
@@ -52,9 +50,29 @@ namespace RadencyLibraryWebAPI.Controllers
 			}
 			catch (Exception ex)
 			{
-				_logger.LogError(ex.Message);
-				return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+				return ReportError(StatusCodes.Status500InternalServerError, exception: ex);
 			}
+		}
+		private ObjectResult ReportError(int statusCode, string reportMessage = "", Exception? exception = null)
+		{
+			if (exception != null)
+			{
+				_logger.LogError(String.Join(" | ",
+				DateTime.UtcNow.ToShortDateString(),
+				statusCode.ToString(),
+				reportMessage,
+				exception.Message,
+				exception.StackTrace));
+			}
+			else
+			{
+				_logger.LogError(String.Join(" | ",
+				DateTime.UtcNow.ToShortDateString(),
+				statusCode.ToString(),
+				reportMessage,
+				"There is no exception"));
+			}
+			return StatusCode(statusCode, reportMessage);
 		}
 	}
 }
