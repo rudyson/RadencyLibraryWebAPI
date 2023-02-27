@@ -147,6 +147,7 @@ namespace RadencyLibraryWebAPI.Controllers
 				{
 					// Adding new book if book not found by Id
 					await _context.Books.AddAsync(newBookConverted);
+					await _context.SaveChangesAsync();
 					bookSavedDto = _mapper.Map<BookIdDto>(newBookConverted);
 				}
 				else
@@ -163,8 +164,8 @@ namespace RadencyLibraryWebAPI.Controllers
 					if (newBookConverted.Author != null)
 						bookExists.Author = newBookConverted.Author;
 					bookSavedDto = _mapper.Map<BookIdDto>(bookExists);
+					await _context.SaveChangesAsync();
 				}
-				await _context.SaveChangesAsync();
 				return Ok(bookSavedDto);
 			}
 			catch (Exception ex)

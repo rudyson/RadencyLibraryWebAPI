@@ -42,7 +42,7 @@ namespace RadencyLibraryWebAPI.Controllers
 					List<BookCompactDto> booksMappedToDto = _mapper.Map<List<Book>, List<BookCompactDto>>(books);
 					return Ok(
 						booksMappedToDto
-						.Where(x => x.ReviewsNumber > 10)
+						.Where(x => x.ReviewsNumber >= 10)
 						.OrderBy(x => x.Rating)
 						.Take(10));
 				}
