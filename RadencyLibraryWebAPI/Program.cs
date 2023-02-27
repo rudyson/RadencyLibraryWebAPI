@@ -36,9 +36,21 @@ builder.Services.AddAutoMapper(
 	typeof(ReviewNewDto).Assembly,
 	typeof(BookNewDto).Assembly
 	);
+// CORS Policy for Angular in Builder
+builder.Services.AddCors(
+	options =>
+	{
+		options.AddPolicy("AllowAll", p =>
+		{
+			p.AllowAnyOrigin()
+			.AllowAnyHeader()
+			.AllowAnyMethod();
+		});
+	});
 
 var app = builder.Build();
-
+// CORS Policy for Angular in App
+app.UseCors("AllowAll");
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
