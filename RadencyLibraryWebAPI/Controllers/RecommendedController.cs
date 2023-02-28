@@ -28,17 +28,26 @@ namespace RadencyLibraryWebAPI.Controllers
 		GET https://{{baseUrl}}/api/recommended?genre=horror
 		*/
 		[HttpGet(Name = "GetRecommendedBooksWithGenreFilter")]
-		public async Task<ActionResult> GetRecommendedBooksWithGenreFilter(string genre)
+		public async Task<ActionResult> GetRecommendedBooksWithGenreFilter(string? genre)
 		{
 			try
 			{
-				if (genre != null)
-				{
-					List<Book> books = await _context.Books
+				List<Book> books = await _context.Books
 					.Include(b => b.Reviews)
 					.Include(b => b.Ratings)
 					.ToListAsync();
+				if (genre != null)
+				{
+					
 					List<Book> booksByGenre = books.Where(b => b.Genre!.ToLower() == genre.ToLower()).ToList();
+					List<BookCompactDto> booksMappedToDto = _mapper.Map<List<Book>, List<BookCompactDto>>(booksByGenre);
+					return Ok(
+						booksMappedToDto
+						.Where(x => x.ReviewsNumber >= 10)
+						.OrderBy(x => x.Rating)
+						.Take(10));
+				}
+				else {
 					List<BookCompactDto> booksMappedToDto = _mapper.Map<List<Book>, List<BookCompactDto>>(books);
 					return Ok(
 						booksMappedToDto
@@ -46,7 +55,6 @@ namespace RadencyLibraryWebAPI.Controllers
 						.OrderBy(x => x.Rating)
 						.Take(10));
 				}
-				else { return BadRequest(); }
 			}
 			catch (Exception ex)
 			{
