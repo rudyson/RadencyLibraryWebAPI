@@ -17,13 +17,24 @@ cd ./RadencyLibraryWebAPI
 MSSQLCONNECTIONSTRING=%CONNECTIONSTRING%
 HTTPDELETE_SECRET=%SECRET%
 ```
+### 4. Migrations and seed data
+To add some data to test workability, create migrations for Entity Framework using command line:
+```
+dotnet ef migrations add NewMigration1
+dotnet ef database update
+```
+or using Package Manager Console:
+```
+Add-Migration NewMigration1
+Update-Database
+```
 
-### 4. Start project
+### 5. Start project
 ```
 dotnet run
 ```
 
-### 5. Test ASP.NET Web API via Swagger
+### 6. Test ASP.NET Web API via Swagger
 ```
 https://localhost:5000/swagger/index.html
 ```
